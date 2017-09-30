@@ -2,8 +2,6 @@ package quizinterfaces;
 
 import java.util.List;
 
-import quiz.Answer;
-
 public interface QuestionInterface {
 
 	public String getQuestionText();
