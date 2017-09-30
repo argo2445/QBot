@@ -52,7 +52,7 @@ public class QuizController implements QuizInterface {
 			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
 			Statement statement = connection.createStatement();
 			ResultSet gameSet = statement
-					.executeQuery("SELECT gameid, numberaskedquestions FROM game WHERE chatid=" + chatID);
+					.executeQuery("SELECT gameid, numberaskedquestions FROM game WHERE chatid=" + chatID+" AND gameid=MAX(gameid)");
 			if (gameSet.next() && gameSet.getInt("numberaskedquestions") == 0)// noch keine Frage gestellt und das Spiel
 																				// existiert
 			{
@@ -61,7 +61,7 @@ public class QuizController implements QuizInterface {
 				ResultSet playerSet = statement.executeQuery("SELECT playerid FROM player WHERE playerid=" + playerId);
 				if (!playerSet.next()) {
 					// Spieler existiert noch nicht->Spieler erzeugen
-					statement.executeQuery("INSERT INTO palyer name VALUES " + playerId);
+					statement.executeQuery("INSERT INTO player name VALUES " + playerId);
 					playerSet = statement.executeQuery("SELECT playerid FROM player WHERE playerid=" + playerId);
 					if (!playerSet.next())
 						throw new RuntimeException("Eben erzeugt und doch nicht da?");
@@ -71,7 +71,7 @@ public class QuizController implements QuizInterface {
 				ResultSet playerGameSet = statement.executeQuery(
 						"SELECT * FROM playergame WHERE playerid=" + dbPlayerId + " AND gameid=" + gameId);
 				if (!playerGameSet.next()) {
-					// Füge Spieler zum Spiel hinzu
+					// FÃ¼ge Spieler zum Spiel hinzu
 					statement.execute("INSERT INTO playergame playerid, gameid, score VALUES " + dbPlayerId + ", "
 							+ gameId + ", 0");
 				}

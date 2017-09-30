@@ -5,15 +5,14 @@ import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
-import quiz.*;
+import quizinterfaces.*;
 
 public class QuizBot extends TelegramLongPollingBot {
 	
-	SendMessage message;
-	boolean gameIsRunning = false;
-	boolean registrationOpen = false;
-	
-	QuizController quizcontroller = new QuizController();
+	private SendMessage message;
+	private boolean gameIsRunning = false;
+	private boolean registrationOpen = false;
+	private QuizInterface quizInterface;
 	
 	@SuppressWarnings("deprecation")
 	@Override
@@ -22,18 +21,18 @@ public class QuizBot extends TelegramLongPollingBot {
 			if(update.getMessage().getText().equals("/open")){
 				if(gameIsRunning == false){
 					gameIsRunning = true;
-					//person die eröffnet hat anmelden
+					//person die erï¿½ffnet hat anmelden
 					message = new SendMessage()
 							.setChatId(update.getMessage().getChatId())
 							.setText("Weitere Personen anmelden durch: /join");
 					registrationOpen = true;
-					quizcontroller.createGame(update.getMessage().getChatId());
-					quizcontroller.addPlayer(update.getMessage().getFrom().getId(), update.getMessage().getChatId());
+					quizInterface.createGame(update.getMessage().getChatId());
+					quizInterface.addPlayer(update.getMessage().getFrom().getId(), update.getMessage().getChatId());
 				}
 				else {
 					message = new SendMessage()
 						.setChatId(update.getMessage().getChatId())
-						.setText("Ein Spiel läuft bereits.");
+						.setText("Ein Spiel lï¿½uft bereits.");
 				}
 			}
 			else if(update.getMessage().getText().equals("/join")){
@@ -42,7 +41,7 @@ public class QuizBot extends TelegramLongPollingBot {
 					message = new SendMessage()
 							.setChatId(update.getMessage().getChatId())
 							.setText(update.getMessage().getFrom().getFirstName() + " ist dem Spiel beigetreten. \n Weitere Personen anmelden durch: /join");
-					quizcontroller.addPlayer(update.getMessage().getFrom().getId(), update.getMessage().getChatId());
+					quizInterface.addPlayer(update.getMessage().getFrom().getId(), update.getMessage().getChatId());
 				}
 				else {
 					message = new SendMessage()
@@ -50,26 +49,36 @@ public class QuizBot extends TelegramLongPollingBot {
 							.setText("Keine Registration offen.");
 				}
 			}
-			else if(update.getMessage().getText().equals("/start")){
+			else if(update.getMessage().getText().startsWith("/start")){
 				if(registrationOpen == true && gameIsRunning == true){
 					message = new SendMessage()
 							.setChatId(update.getMessage().getChatId())
 							.setText("Spiel startet jetzt.");
 					registrationOpen = false;
 					//start game
-					quizcontroller.startGame(update.getMessage().getChatId(), 10); //TODO Variable eingeben.
+					String string = update.getMessage().getText();
+					String[] parts = string.split(" ");
+					String num = parts[1]; //Number
+					int numberOfQuestions=10;
+					if(num !=null) {
+					numberOfQuestions=Integer.parseInt(num);
+					}
+					message = new SendMessage()
+							.setChatId(update.getMessage().getChatId())
+							.setText("Stelle"+numberOfQuestions+" Fragen");
+					quizInterface.startGame(update.getMessage().getChatId(), numberOfQuestions);
 				}
 				else{
 					message = new SendMessage()
 							.setChatId(update.getMessage().getChatId())
-							.setText("Kein Spielstart möglich.");
+							.setText("Kein Spielstart mÃ¶glich.");
 				}
 			}
 			else if(update.getMessage().getText().equals("/stop")){
 				if(gameIsRunning == true){
 					gameIsRunning = false;
 					//Spiel beenden
-					quizcontroller.endGame(update.getMessage().getChatId());
+					quizInterface.endGame(update.getMessage().getChatId());
 					message = new SendMessage()
 							.setChatId(update.getMessage().getChatId())
 							.setText("Spiel beendet.");
