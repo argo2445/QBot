@@ -3,6 +3,7 @@ package bot;
 import java.util.ArrayList;
 import java.util.List;
 import static java.lang.Math.*;
+import java.util.StringTokenizer;
 
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
@@ -21,6 +22,9 @@ public class QuizBot extends TelegramLongPollingBot {
 	private boolean gameIsRunning = false;
 	private boolean registrationOpen = false;
 	private QuizInterface quizInterface;
+	private InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+    private List<List<InlineKeyboardButton>> bList = new ArrayList<>();
+    private List<InlineKeyboardButton> aList = new ArrayList<>();
 	
 	@SuppressWarnings("deprecation")
 	@Override
@@ -62,16 +66,22 @@ public class QuizBot extends TelegramLongPollingBot {
 							.setText("Spiel startet jetzt.");
 					registrationOpen = false;
 					//start game
-					String string = update.getMessage().getText();
-					String[] parts = string.split(" ");
-					String num = parts[1]; //Number
-					numberOfQuestions=10;
-					if(num !=null) {
-					numberOfQuestions=Integer.parseInt(num);
+					StringTokenizer st = new StringTokenizer(update.getMessage().getText());
+					String num = "10";
+					if(st.hasMoreTokens()) {
+						num = st.nextToken(); //Number
 					}
-					message = new SendMessage()
-							.setChatId(update.getMessage().getChatId())
-							.setText("Stelle "+numberOfQuestions+" Fragen");
+					numberOfQuestions=10;
+					try {
+						numberOfQuestions=Integer.parseInt(num);
+						message = new SendMessage()
+								.setChatId(update.getMessage().getChatId())
+								.setText("Stelle "+numberOfQuestions+" Fragen");
+					}catch (NumberFormatException e ){
+						message = new SendMessage()
+								.setChatId(update.getMessage().getChatId())
+								.setText("Keine gültige Eingabe. /n Stelle "+numberOfQuestions+" Fragen");
+					}
 					try {
 						sendMessage(message);
 					} catch (TelegramApiException e) {
@@ -81,25 +91,19 @@ public class QuizBot extends TelegramLongPollingBot {
 					message = new SendMessage()
 							.setChatId(update.getMessage().getChatId())
 							.setText(quizInterface.fetchQuestion(update.getMessage().getChatId()).getQuestionText());
-					
-					InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-		            List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-		            List<InlineKeyboardButton> rowInline = new ArrayList<>();
-		            
-		            //for(String answer : quizInterface.fetchQuestion(update.getMessage().getChatId()).)
-		            
-		            /*List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
-		            rowInline.add(new InlineKeyboardButton().setText("Update message text").setCallbackData("update_msg_text"));
-		            rowInline.add(new InlineKeyboardButton().setText("Update message text2").setCallbackData("update_msg_text2"));
-		           
-		            rowInline2.add(new InlineKeyboardButton().setText("Update message text3").setCallbackData("update_msg_text3"));
-		            rowInline2.add(new InlineKeyboardButton().setText("Update message text4").setCallbackData("update_msg_text4"));
-		            // Set the keyboard to the markup
-		            rowsInline.add(rowInline);
-		            rowsInline.add(rowInline2);
-		            // Add it to the message
-		            markupInline.setKeyboard(rowsInline);
-		            message.setReplyMarkup(markupInline);*/
+					for(int z=0;z<quizInterface.fetchQuestion(update.getMessage().getChatId()).getAnswers().size();z++) {
+						if(z%2 ==0) {
+							aList = new ArrayList<>();
+						}
+						aList.add(new InlineKeyboardButton().setText(quizInterface
+		            			.fetchQuestion(update.getMessage().getChatId()).getAnswers().get(z).getAnswerText())
+		            			.setCallbackData("answer"+z));
+		             	if(z%2 ==0) {
+		             		bList.add(aList);
+		                }
+					}					
+		            markupInline.setKeyboard(bList);
+		            message.setReplyMarkup(markupInline);
 		            
 		            
 				}
