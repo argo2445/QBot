@@ -2,19 +2,12 @@ package quiz;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.LongArraySerializer;
-
-import javafx.print.PageLayout;
 import quizinterfaces.AnswerInterface;
 import quizinterfaces.QuestionInterface;
 import quizinterfaces.QuizInterface;
