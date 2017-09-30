@@ -83,23 +83,21 @@ public class QuizBot extends TelegramLongPollingBot {
 							.setText(quizInterface.fetchQuestion(update.getMessage().getChatId()).getQuestionText());
 					
 					InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-		            List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-		            List<InlineKeyboardButton> rowInline = new ArrayList<>();
-		            
-		            //for(String answer : quizInterface.fetchQuestion(update.getMessage().getChatId()).)
-		            
-		            /*List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
-		            rowInline.add(new InlineKeyboardButton().setText("Update message text").setCallbackData("update_msg_text"));
-		            rowInline.add(new InlineKeyboardButton().setText("Update message text2").setCallbackData("update_msg_text2"));
-		           
-		            rowInline2.add(new InlineKeyboardButton().setText("Update message text3").setCallbackData("update_msg_text3"));
-		            rowInline2.add(new InlineKeyboardButton().setText("Update message text4").setCallbackData("update_msg_text4"));
-		            // Set the keyboard to the markup
-		            rowsInline.add(rowInline);
-		            rowsInline.add(rowInline2);
-		            // Add it to the message
-		            markupInline.setKeyboard(rowsInline);
-		            message.setReplyMarkup(markupInline);*/
+		            List<List<InlineKeyboardButton>> bList = new ArrayList<>();
+		            List<InlineKeyboardButton> aList = new ArrayList<>();
+					for(int z=0;z<quizInterface.fetchQuestion(update.getMessage().getChatId()).getAnswers().size();z++) {
+						if(z%2 ==0) {
+							aList = new ArrayList<>();
+						}
+						aList.add(new InlineKeyboardButton().setText(quizInterface
+		            			.fetchQuestion(update.getMessage().getChatId()).getAnswers().get(z).getAnswerText())
+		            			.setCallbackData("answer"+z));
+		             	if(z%2 ==0) {
+		             		bList.add(aList);
+		                }
+					}					
+		            markupInline.setKeyboard(bList);
+		            message.setReplyMarkup(markupInline);
 		            
 		            
 				}
