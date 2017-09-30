@@ -3,6 +3,7 @@ package quiz;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.sql.Connection;
@@ -153,7 +154,8 @@ public class QuizController implements QuizInterface {
 
 			ResultSet questionGameSet = statement
 					.executeQuery("SELECT questionid,gameid FROM questiongame WHERE gameid=" + dbGameId);
-			questionGameSet.absolute(askedQuestions + 1);
+			if (!questionGameSet.absolute(askedQuestions + 1))
+				return null;
 			int questionId = questionGameSet.getInt("questionid");
 			Question question = new Question(questionId);
 			statement.execute(
@@ -176,12 +178,54 @@ public class QuizController implements QuizInterface {
 		// suche den Spieler mit dem Namen playerId und rufe dessen dbPlayerId ab
 		// Wenn gewusst, addiere richtige frage
 		// Addiere eine Frage zum Spieler
-		// wenn gewusst: lade das letzte Spiel mit der ChatId 
-		// 		inkrementiere den Score
-		
-		
-		
-		return false;
+		// wenn gewusst: lade das letzte Spiel mit der ChatId
+		// inkrementiere den Score
+		boolean correct = false;
+		Answer castedAnswer = (Answer) answer;
+		if (castedAnswer.getQuestion().getRightAnswer().getAnswerText().equals(answer.getAnswerText())) {
+			correct = true;
+		}
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
+			Statement statement = connection.createStatement();
+			ResultSet playerSet = statement.executeQuery("SELECT playerId, answeredquestions, rightansweredquestions "
+					+ "FROM player WHERE name=" + playerId);
+			int dbPlayerId, rightanswered, answered, dbGameId;
+			if (playerSet.next()) {
+				dbPlayerId = playerSet.getInt("playerid");
+				rightanswered = playerSet.getInt("rightansweredquestions");
+				answered = playerSet.getInt("answeredquestions");
+			} else {
+				throw new RuntimeException("Spieler mit dem Namen " + playerId + " existiert nicht.");
+			}
+			if (correct) {
+				// update Player
+				statement.execute("UPDATE player SET answeredquestions=" + (answered + 1) + ",rightansweredquestions="
+						+ (rightanswered + 1) + "  WHERE playerid=" + dbPlayerId);
+
+				// Update Score
+				ResultSet gameSet = statement.executeQuery("SELECT gameid, numberaskedquestions FROM game "
+						+ "WHERE chatid=" + chatID + " AND gameid=(SELECT MAX(gameid) FROM game)");
+				if (gameSet.next()) {
+					dbGameId = gameSet.getInt("gameid");
+					statement.execute("UPDATE playergame SET score=(score+1) WHERE gameid= " + dbGameId
+							+ " AND playerid= " + dbPlayerId);
+				} else {
+					throw new RuntimeException(
+							"Das gesuchte Spiel mit der chatId " + chatID + "konnte nicht gefunden werden.");
+				}
+
+			} else {
+				// update Player
+				statement.execute(
+						"UPDATE player SET answeredquestions=" + (answered + 1) + "  WHERE playerid=" + dbPlayerId);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return correct;
 	}
 
 	/*
@@ -191,8 +235,29 @@ public class QuizController implements QuizInterface {
 	 */
 	@Override
 	public List<String> retrieveScore(long chatID) {
-		// TODO Auto-generated method stub
-		return null;
+		List<String> scores = new ArrayList<>();
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
+			Statement statement = connection.createStatement();
+			int dbGameId = 0;
+			ResultSet gameSet = statement.executeQuery("SELECT gameid, numberaskedquestions FROM game "
+					+ "WHERE chatid=" + chatID + " AND gameid=(SELECT MAX(gameid) FROM game)");
+			if (gameSet.next()) {
+				dbGameId = gameSet.getInt("gameid");
+			}
+			ResultSet scoreSet = statement
+					.executeQuery("SELECT score , player.playerid, name " + "FROM playergame INNER JOIN player "
+							+ "ON player.playerid=playergame.playerid " + "WHERE playergame.gameid=" + dbGameId);
+			while (scoreSet.next()) {
+				String playerName = scoreSet.getString("name");
+				int playerScore = scoreSet.getInt("score");
+				scores.add(playerName + ": " + playerScore);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return scores;
 	}
 
 	/*
@@ -202,19 +267,33 @@ public class QuizController implements QuizInterface {
 	 */
 	@Override
 	public void endGame(long chatID) {
-		// TODO Auto-generated method stub
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
+			Statement statement = connection.createStatement();
+			int dbGameId = 0;
+			ResultSet gameSet = statement.executeQuery("SELECT gameid, numberaskedquestions FROM game "
+					+ "WHERE chatid=" + chatID + " AND gameid=(SELECT MAX(gameid) FROM game)");
+			if (gameSet.next()) {
+				dbGameId = gameSet.getInt("gameid");
+				statement.execute("UPDATE game SET numberaskedquestions=" + (Integer.MAX_VALUE - 1) + " WHERE gameid="
+						+ dbGameId);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 
 	}
 
-	/**
-	 * Testmethod for model Classes
-	 * 
-	 * @param args
-	 * @throws SQLException
-	 */
-	public static void main(String[] args) throws SQLException {
-		@SuppressWarnings("unused")
-		Question q = new Question(1);
-	}
+	// /**
+	// * Testmethod for model Classes
+	// *
+	// * @param args
+	// * @throws SQLException
+	// */
+	// public static void main(String[] args) throws SQLException {
+	// @SuppressWarnings("unused")
+	// Question q = new Question(1);
+	// }
 
 }
