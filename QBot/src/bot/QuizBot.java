@@ -5,11 +5,15 @@ import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import quiz.*;
+
 public class QuizBot extends TelegramLongPollingBot {
 	
 	SendMessage message;
 	boolean gameIsRunning = false;
 	boolean registrationOpen = false;
+	
+	QuizController quizcontroller = new QuizController();
 	
 	@SuppressWarnings("deprecation")
 	@Override
@@ -23,6 +27,8 @@ public class QuizBot extends TelegramLongPollingBot {
 							.setChatId(update.getMessage().getChatId())
 							.setText("Weitere Personen anmelden durch: /join");
 					registrationOpen = true;
+					quizcontroller.createGame(update.getMessage().getChatId());
+					quizcontroller.addPlayer(update.getMessage().getFrom().getId(), update.getMessage().getChatId());
 				}
 				else {
 					message = new SendMessage()
@@ -36,6 +42,7 @@ public class QuizBot extends TelegramLongPollingBot {
 					message = new SendMessage()
 							.setChatId(update.getMessage().getChatId())
 							.setText(update.getMessage().getFrom().getFirstName() + " ist dem Spiel beigetreten. \n Weitere Personen anmelden durch: /join");
+					quizcontroller.addPlayer(update.getMessage().getFrom().getId(), update.getMessage().getChatId());
 				}
 				else {
 					message = new SendMessage()
@@ -50,6 +57,7 @@ public class QuizBot extends TelegramLongPollingBot {
 							.setText("Spiel startet jetzt.");
 					registrationOpen = false;
 					//start game
+					quizcontroller.startGame(update.getMessage().getChatId(), 10); //TODO Variable eingeben.
 				}
 				else{
 					message = new SendMessage()
@@ -61,6 +69,7 @@ public class QuizBot extends TelegramLongPollingBot {
 				if(gameIsRunning == true){
 					gameIsRunning = false;
 					//Spiel beenden
+					quizcontroller.endGame(update.getMessage().getChatId());
 					message = new SendMessage()
 							.setChatId(update.getMessage().getChatId())
 							.setText("Spiel beendet.");
