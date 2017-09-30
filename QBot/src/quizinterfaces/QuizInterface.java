@@ -4,17 +4,17 @@ import java.util.List;
 
 public interface QuizInterface {
 	
-	public int createGame();
+	public void createGame(long chatID);
 	
-	public void addPlayer(String name, int gameID);
+	public void addPlayer(String name, long chatID);
 	
-	public void startGame(int gameID, int rounds);
+	public void startGame(long chatID, int rounds);
 	
-	public QuestionInterface fetchQuestion(int gameID);
+	public QuestionInterface fetchQuestion(long chatID);
 	
-	public boolean enterAnswer(int gameID, String name, AnswerInterface answer);
+	public boolean enterAnswer(long chatID, String name, AnswerInterface answer);
 	
-	public List<String> retrieveScore(int gameID);
+	public List<String> retrieveScore(long chatID);
 	
-	public void endGame(int gameID);
+	public void endGame(long chatID);
 }
