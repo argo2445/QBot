@@ -179,6 +179,8 @@ public class QuizController implements QuizInterface {
 		// wenn gewusst: lade das letzte Spiel mit der ChatId 
 		// 		inkrementiere den Score
 		
+		
+		
 		return false;
 	}
 
