@@ -11,4 +11,5 @@ public interface QuestionInterface {
 	public AnswerInterface getRightAnswer();
 
 	public List<? extends AnswerInterface> getAnswers();
+	
 }
