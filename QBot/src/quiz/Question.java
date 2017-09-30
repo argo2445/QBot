@@ -33,7 +33,7 @@ public class Question implements QuestionInterface {
 	public Question(int questionDatabaseID) {
 		Connection connection = null;
 		try {
-			connection = DriverManager.getConnection("jdbc:sqlite:"+QuizController.DB_PATH);
+			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
 
 			if (categories == null) {
 				readCategories(connection);
@@ -52,15 +52,25 @@ public class Question implements QuestionInterface {
 				this.answered = resultSet.getInt("askedquestions");
 				this.dataBaseId = resultSet.getInt("questionid");
 				this.answers = readAnswers(dataBaseId, connection);
-				if (this.answers != null) {
+				if (this.answers.size() > 0) {
 					int rightAnswerId = resultSet.getInt("rightanswerid");
-					Optional<Answer> optRightAnswer = answers.stream().filter(aw -> aw.getDatabaseId() == rightAnswerId)
-							.findFirst();
-					if (optRightAnswer.isPresent())
-						this.rightAnswer = optRightAnswer.get();
-					else {
-						throw new IllegalArgumentException(
-								"Die korrekte Antwort für " + this.dataBaseId + " konnte nicht gefunden werden.");
+					if (rightAnswerId == 0) {
+						// Entscheidungsfrage
+						if (isTrue) {
+							rightAnswer = answers.get(0);
+						} else {
+							rightAnswer = answers.get(1);
+						}
+					} else {
+						// keine Entscheidungsfrage
+						Optional<Answer> optRightAnswer = answers.stream()
+								.filter(aw -> aw.getDatabaseId() == rightAnswerId).findFirst();
+						if (optRightAnswer.isPresent())
+							this.rightAnswer = optRightAnswer.get();
+						else {
+							throw new IllegalArgumentException(
+									"Die korrekte Antwort für " + this.dataBaseId + " konnte nicht gefunden werden.");
+						}
 					}
 				}
 				int categoryKey = resultSet.getInt("categoryid");
@@ -89,12 +99,14 @@ public class Question implements QuestionInterface {
 		while (answerSet.next()) {
 			int awId = answerSet.getInt("answerid");
 			String awText = answerSet.getString("answertext");
-			answers.add(new Answer(awId, awText));
+			answers.add(new Answer(this,awId, awText));
 
 		}
-		if (answers.size() > 0)
-			return answers;
-		return null;
+		if (answers.size() == 0) {
+			answers.add(new Answer(this,-1, "Richtig"));
+			answers.add(new Answer(this,-2, "Falsch"));
+		}
+		return answers;
 	}
 
 	/**
