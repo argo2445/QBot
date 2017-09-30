@@ -33,7 +33,7 @@ public class Question implements QuestionInterface {
 	public Question(int questionDatabaseID) {
 		Connection connection = null;
 		try {
-			connection = DriverManager.getConnection("jdbc:sqlite:res/qbot.sqlite");
+			connection = DriverManager.getConnection("jdbc:sqlite:"+QuizController.DB_PATH);
 
 			if (categories == null) {
 				readCategories(connection);
@@ -52,15 +52,16 @@ public class Question implements QuestionInterface {
 				this.answered = resultSet.getInt("askedquestions");
 				this.dataBaseId = resultSet.getInt("questionid");
 				this.answers = readAnswers(dataBaseId, connection);
-				// TODO set Right Answer
-				int rightAnswerId = resultSet.getInt("rightanswerid");
-				Optional<Answer> optRightAnswer = answers.stream().filter(aw -> aw.getDatabaseId() == rightAnswerId)
-						.findFirst();
-				if (optRightAnswer.isPresent())
-					this.rightAnswer = optRightAnswer.get();
-				else {
-					throw new IllegalArgumentException(
-							"Die korrekte Antwort für " + this.dataBaseId + " konnte nicht gefunden werden.");
+				if (this.answers != null) {
+					int rightAnswerId = resultSet.getInt("rightanswerid");
+					Optional<Answer> optRightAnswer = answers.stream().filter(aw -> aw.getDatabaseId() == rightAnswerId)
+							.findFirst();
+					if (optRightAnswer.isPresent())
+						this.rightAnswer = optRightAnswer.get();
+					else {
+						throw new IllegalArgumentException(
+								"Die korrekte Antwort für " + this.dataBaseId + " konnte nicht gefunden werden.");
+					}
 				}
 				int categoryKey = resultSet.getInt("categoryid");
 				Optional<Category> categ = categories.stream().filter(cat -> cat.getDatabaseID() == categoryKey)
@@ -91,7 +92,51 @@ public class Question implements QuestionInterface {
 			answers.add(new Answer(awId, awText));
 
 		}
+		if (answers.size() > 0)
+			return answers;
+		return null;
+	}
+
+	/**
+	 * @return the dataBaseId
+	 */
+	public int getDataBaseId() {
+		return dataBaseId;
+	}
+
+	/**
+	 * @return the answers
+	 */
+	public List<Answer> getAnswers() {
 		return answers;
+	}
+
+	/**
+	 * @return the category
+	 */
+	public Category getCategory() {
+		return category;
+	}
+
+	/**
+	 * @return the answered
+	 */
+	public int getAnswered() {
+		return answered;
+	}
+
+	/**
+	 * @return the rightAnswered
+	 */
+	public int getRightAnswered() {
+		return rightAnswered;
+	}
+
+	/**
+	 * @return the categories
+	 */
+	public static List<Category> getCategories() {
+		return categories;
 	}
 
 	/**
