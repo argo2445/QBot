@@ -1,5 +1,7 @@
 package quizinterfaces;
 
+import java.util.List;
+
 public interface QuizInterface {
 	
 	public int createGame();
@@ -8,9 +10,9 @@ public interface QuizInterface {
 	
 	public void startGame(int gameID, int rounds);
 	
-	public Question fetchQuestion(int gameID);
+	public QuestionInterface fetchQuestion(int gameID);
 	
-	public boolean enterAnswer(int gameID, String name, Answer answer);
+	public boolean enterAnswer(int gameID, String name, AnswerInterface answer);
 	
 	public List<String> retrieveScore(int gameID);
 	
