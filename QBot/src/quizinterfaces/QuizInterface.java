@@ -15,5 +15,4 @@ public interface QuizInterface {
 	public List<String> retrieveScore(int gameID);
 	
 	public void endGame(int gameID);
-	
 }
