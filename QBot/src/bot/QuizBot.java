@@ -22,7 +22,7 @@ public class QuizBot extends TelegramLongPollingBot {
 	private QuizInterface quizInterface;
 
 	public QuizBot(QuizController quizController) {
-		quizInterface=quizController;
+		quizInterface = quizController;
 	}
 
 	@Override
@@ -58,8 +58,15 @@ public class QuizBot extends TelegramLongPollingBot {
 
 	private void startQuiz(Update update) {
 		String msg = update.getMessage().getText();
-		String rounds = msg.substring(msg.indexOf(' ') + 1);
-		rounds = rounds.substring(0, rounds.indexOf(' '));
+		String rounds="";
+		try {
+			rounds = msg.substring(msg.indexOf(' ') + 1);
+			if (rounds.contains(" "));
+				rounds = rounds.substring(0, rounds.indexOf(' '));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		int roundsInt = 10;
 		try {
 			roundsInt = Integer.parseInt(rounds);

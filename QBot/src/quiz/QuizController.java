@@ -27,7 +27,7 @@ public class QuizController implements QuizInterface {
 		try {
 			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
 			Statement statement = connection.createStatement();
-			statement.executeQuery("INSERT INTO game numberaskedquestions, chatid VALUES 0," + chatID);
+			statement.executeQuery("INSERT INTO game (numberaskedquestions, chatid) VALUES (0," + chatID+")");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
