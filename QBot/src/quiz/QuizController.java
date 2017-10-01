@@ -66,8 +66,8 @@ public class QuizController implements QuizInterface {
 						"SELECT * FROM playergame WHERE playerid=" + dbPlayerId + " AND gameid=" + gameId);
 				if (!playerGameSet.next()) {
 					// Füge Spieler zum Spiel hinzu
-					statement.execute("INSERT INTO playergame playerid, gameid, score VALUES " + dbPlayerId + ", "
-							+ gameId + ", 0");
+					statement.execute("INSERT INTO playergame playerid, gameid, score, username VALUES " + dbPlayerId + ", "
+							+ gameId + ", 0" + "," + UserName);
 				}
 			}
 		} catch (SQLException e) {
