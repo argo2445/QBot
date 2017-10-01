@@ -6,6 +6,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.telegram.telegrambots.api.methods.send.SendMessage;
+import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -124,20 +125,32 @@ public class QuizBot extends TelegramLongPollingBot {
 				}
 			}
 		}
+		int bs = 0; //ab hier hässlich
 		try {
-			execute(questionMessage);
+			bs = execute(questionMessage).getMessageId();
 		} catch (TelegramApiException e) {
 			e.printStackTrace();
 		}
+		
+		EditMessageText new_message = new EditMessageText()
+              .setChatId(chatId)
+              .setMessageId(bs)
+              .setText(question.getQuestionText());
+		
 		TimerTask tt = new TimerTask() {
 
 			@Override
 			public void run() {
+				try {
+					execute(new_message);
+				} catch (TelegramApiException e) {
+					e.printStackTrace();
+				} //ende hässlich
 				showNewQuestion(chatId);
 
 			}
 		};
-		new Timer().schedule(tt, 20000L);
+		new Timer().schedule(tt, 10000L);
 	}
 
 }
