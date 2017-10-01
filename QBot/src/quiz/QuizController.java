@@ -90,6 +90,7 @@ public class QuizController implements QuizInterface {
 		try {
 			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
 			Statement statement = connection.createStatement();
+			Statement statement2 = connection.createStatement();
 			int dbGameId;
 			ResultSet gameSet = statement.executeQuery("SELECT gameid, numberaskedquestions FROM game "
 					+ "WHERE chatid=" + chatID + " AND gameid=(SELECT MAX(gameid) FROM game)");
@@ -110,7 +111,7 @@ public class QuizController implements QuizInterface {
 			while (questionSet.next()) {
 				int qId = questionSet.getInt("questionid");
 				// Add Question Game Pair
-				statement.execute(
+				statement2.execute(
 						"INSERT INTO questiongame (questionid, gameid) VALUES (" + qId + ", " + dbGameId + ")");
 			}
 		} catch (SQLException e) {
