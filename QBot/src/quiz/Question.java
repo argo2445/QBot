@@ -84,6 +84,7 @@ public class Question implements QuestionInterface {
 				}
 
 			}
+			connection.close();
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}

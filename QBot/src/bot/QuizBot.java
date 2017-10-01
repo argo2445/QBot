@@ -125,7 +125,7 @@ public class QuizBot extends TelegramLongPollingBot {
 
 			}
 		};
-		new Timer().schedule(tt, 2000L);
+		new Timer().schedule(tt, 20000L);
 	}
 
 }

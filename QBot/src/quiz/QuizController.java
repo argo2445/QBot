@@ -27,6 +27,7 @@ public class QuizController implements QuizInterface {
 			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
 			Statement statement = connection.createStatement();
 			statement.execute("INSERT INTO game (numberaskedquestions, chatid) VALUES (0," + chatID + ")");
+			connection.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -70,6 +71,7 @@ public class QuizController implements QuizInterface {
 							+ gameId + ", 0" + ")");
 				}
 			}
+			connection.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -113,6 +115,7 @@ public class QuizController implements QuizInterface {
 				statement2.execute(
 						"INSERT INTO questiongame (questionid, gameid) VALUES (" + qId + ", " + dbGameId + ")");
 			}
+			connection.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -149,13 +152,18 @@ public class QuizController implements QuizInterface {
 
 			ResultSet questionGameSet = statement
 					.executeQuery("SELECT questionid,gameid FROM questiongame WHERE gameid=" + dbGameId);
-			if (!questionGameSet.absolute(askedQuestions + 1))
-				return null;
-			int questionId = questionGameSet.getInt("questionid");
-			Question question = new Question(questionId);
-			statement.execute(
-					"UPDATE game SET numberaskedquestions=" + (askedQuestions + 1) + " WHERE gameid=" + dbGameId);
-			return question;
+			int i = 0;
+			while (questionGameSet.next() && i < askedQuestions) {
+				i++;
+			}
+			if (!questionGameSet.isClosed()) {
+				int questionId = questionGameSet.getInt("questionid");
+				Question question = new Question(questionId);
+				statement.execute(
+						"UPDATE game SET numberaskedquestions=" + (askedQuestions + 1) + " WHERE gameid=" + dbGameId);
+				connection.close();
+				return question;
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -189,7 +197,8 @@ public class QuizController implements QuizInterface {
 
 			// Check if answerDbId is ID of correct Answer
 			ResultSet rightAnswerSet = statement.executeQuery(
-					"SELECT rightanswerid FROM question INNER JOIN answer ON question.questionid=answer.questionid");
+					"SELECT rightanswerid FROM question INNER JOIN answer ON question.questionid=answer.questionid WHERE answerid="
+							+ answerDbId);
 			if (rightAnswerSet.next()) {
 				int rightanswerId = rightAnswerSet.getInt("rightanswerid");
 				if (rightanswerId == answerDbId)
@@ -227,7 +236,7 @@ public class QuizController implements QuizInterface {
 				statement.execute(
 						"UPDATE player SET answeredquestions=" + (answered + 1) + "  WHERE playerid=" + dbPlayerId);
 			}
-
+			connection.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -262,6 +271,7 @@ public class QuizController implements QuizInterface {
 				scores.add(userName + ": " + playerScore);
 
 			}
+			connection.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -287,6 +297,7 @@ public class QuizController implements QuizInterface {
 				statement.execute("UPDATE game SET numberaskedquestions=" + (Integer.MAX_VALUE - 1) + " WHERE gameid="
 						+ dbGameId);
 			}
+			connection.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
