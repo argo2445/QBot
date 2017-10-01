@@ -110,7 +110,6 @@ public class QuizBot extends TelegramLongPollingBot {
 			try {
 				execute(msg);
 			} catch (TelegramApiException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			return;
@@ -146,7 +145,7 @@ public class QuizBot extends TelegramLongPollingBot {
 				}
 			}
 		}
-		int bs = 0; // ab hier hässlich
+		int bs = 0;
 		try {
 			bs = execute(questionMessage).getMessageId();
 		} catch (TelegramApiException e) {
@@ -164,12 +163,13 @@ public class QuizBot extends TelegramLongPollingBot {
 					execute(new_message);
 				} catch (TelegramApiException e) {
 					e.printStackTrace();
-				} // ende hässlich
+				}
 				showNewQuestion(chatId);
 
 			}
 		};
 		new Timer().schedule(tt, 10000L);
+
 	}
 
 }
