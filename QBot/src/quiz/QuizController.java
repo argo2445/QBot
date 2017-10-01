@@ -27,7 +27,7 @@ public class QuizController implements QuizInterface {
 		try {
 			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
 			Statement statement = connection.createStatement();
-			statement.executeQuery("INSERT INTO game (numberaskedquestions, chatid) VALUES (0," + chatID+")");
+			statement.execute("INSERT INTO game (numberaskedquestions, chatid) VALUES (0," + chatID + ")");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -52,11 +52,12 @@ public class QuizController implements QuizInterface {
 			{
 				int gameId = gameSet.getInt("gameid");
 				// Finde heraus, ob es schon einen Spieler mit PlayerId gibt.
-				ResultSet playerSet = statement.executeQuery("SELECT playerid FROM player WHERE playerid=" + playerId);
+				ResultSet playerSet = statement.executeQuery("SELECT playerid FROM player WHERE name=" + playerId);
 				if (!playerSet.next()) {
 					// Spieler existiert noch nicht->Spieler erzeugen
-					statement.executeQuery("INSERT INTO player name VALUES " + playerId);
-					playerSet = statement.executeQuery("SELECT playerid FROM player WHERE playerid=" + playerId);
+					statement.execute(
+							"INSERT INTO player (name, username) VALUES (" + playerId + ", '" + UserName + "')");
+					playerSet = statement.executeQuery("SELECT playerid FROM player WHERE name=" + playerId);
 					if (!playerSet.next())
 						throw new RuntimeException("Eben erzeugt und doch nicht da?");
 				}
@@ -66,8 +67,8 @@ public class QuizController implements QuizInterface {
 						"SELECT * FROM playergame WHERE playerid=" + dbPlayerId + " AND gameid=" + gameId);
 				if (!playerGameSet.next()) {
 					// Füge Spieler zum Spiel hinzu
-					statement.execute("INSERT INTO playergame playerid, gameid, score, username VALUES " + dbPlayerId + ", "
-							+ gameId + ", 0" + "," + UserName);
+					statement.execute("INSERT INTO playergame (playerid, gameid, score) VALUES (" + dbPlayerId + ", "
+							+ gameId + ", 0" + ")");
 				}
 			}
 		} catch (SQLException e) {
@@ -109,7 +110,8 @@ public class QuizController implements QuizInterface {
 			while (questionSet.next()) {
 				int qId = questionSet.getInt("questionid");
 				// Add Question Game Pair
-				statement.execute("INSERT INTO questiongame questionid, gameid VALUES " + qId + ", " + dbGameId);
+				statement.execute(
+						"INSERT INTO questiongame (questionid, gameid) VALUES (" + qId + ", " + dbGameId + ")");
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -250,15 +252,15 @@ public class QuizController implements QuizInterface {
 			if (gameSet.next()) {
 				dbGameId = gameSet.getInt("gameid");
 			}
-			ResultSet scoreSet = statement
-					.executeQuery("SELECT score , player.playerid, name, username" + "FROM playergame INNER JOIN player "
+			ResultSet scoreSet = statement.executeQuery(
+					"SELECT score , player.playerid, name, username " + "FROM playergame INNER JOIN player "
 							+ "ON player.playerid=playergame.playerid " + "WHERE playergame.gameid=" + dbGameId);
 			while (scoreSet.next()) {
-				//String playerName = scoreSet.getString("name");
+				// String playerName = scoreSet.getString("name");
 				int playerScore = scoreSet.getInt("score");
 				String userName = scoreSet.getString("username");
 				scores.add(userName + ": " + playerScore);
-				
+
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
