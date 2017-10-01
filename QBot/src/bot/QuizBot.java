@@ -58,14 +58,14 @@ public class QuizBot extends TelegramLongPollingBot {
 
 	private void startQuiz(Update update) {
 		String msg = update.getMessage().getText();
-		String rounds="";
+		String rounds = "";
 		try {
 			rounds = msg.substring(msg.indexOf(' ') + 1);
-			if (rounds.contains(" "));
-				rounds = rounds.substring(0, rounds.indexOf(' '));
+			if (rounds.contains(" "))
+				;
+			rounds = rounds.substring(0, rounds.indexOf(' '));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			
 		}
 		int roundsInt = 10;
 		try {
@@ -110,7 +110,19 @@ public class QuizBot extends TelegramLongPollingBot {
 				bList.add(aList);
 			}
 			AnswerInterface aIf = question.getAnswers().get(i);
-			aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + aIf.getDatabaseId()));
+			if (aIf.getDatabaseId() > 0)
+				aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + aIf.getDatabaseId()));
+			else {
+				if (question.isTrue() && i == 0) {
+					aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + -1));
+				}else if(question.isTrue() && i == 1) {
+					aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + 0));
+				}else if (!question.isTrue() && i == 0) {
+					aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + 0));
+				}else {
+					aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + -1));
+				}
+			}
 		}
 		try {
 			execute(questionMessage);

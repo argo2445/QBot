@@ -203,6 +203,8 @@ public class QuizController implements QuizInterface {
 				int rightanswerId = rightAnswerSet.getInt("rightanswerid");
 				if (rightanswerId == answerDbId)
 					correct = true;
+			} else if (answerDbId == -1) {
+				correct = true;
 			}
 			ResultSet playerSet = statement.executeQuery("SELECT playerId, answeredquestions, rightansweredquestions "
 					+ "FROM player WHERE name=" + playerId);
