@@ -1,6 +1,7 @@
 package bot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -50,11 +51,26 @@ public class QuizBot extends TelegramLongPollingBot {
 
 	}
 
+	HashMap<Integer, Integer> userAnswers;
+
 	private void answerQuestion(Update update) {
 		quizInterface.addPlayer(update.getCallbackQuery().getFrom().getId(),
 				update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getFrom().getUserName());
-		quizInterface.enterAnswer(update.getCallbackQuery().getMessage().getChatId(),
-				update.getCallbackQuery().getFrom().getId(), Integer.parseInt(update.getCallbackQuery().getData()));
+		int userId = update.getCallbackQuery().getFrom().getId();
+		String query = update.getCallbackQuery().getData();
+		String questionIdS = query.substring(0, query.indexOf('_'));
+		String answerIdS = query.substring(query.indexOf('_') + 1);
+		int questionId = Integer.parseInt(questionIdS);
+		int answerId = Integer.parseInt(answerIdS);
+		if (userAnswers == null) {
+			userAnswers = new HashMap<>();
+		}
+		if (!userAnswers.containsKey(userId) || userAnswers.get(userId) != questionId) {
+			quizInterface.enterAnswer(update.getCallbackQuery().getMessage().getChatId(),
+					update.getCallbackQuery().getFrom().getId(), answerId);
+			userAnswers.put(userId, questionId);
+		}
+
 	}
 
 	private void startQuiz(Update update) {
@@ -66,7 +82,7 @@ public class QuizBot extends TelegramLongPollingBot {
 				;
 			rounds = rounds.substring(0, rounds.indexOf(' '));
 		} catch (Exception e) {
-			
+
 		}
 		int roundsInt = 10;
 		try {
@@ -112,31 +128,34 @@ public class QuizBot extends TelegramLongPollingBot {
 			}
 			AnswerInterface aIf = question.getAnswers().get(i);
 			if (aIf.getDatabaseId() > 0)
-				aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + aIf.getDatabaseId()));
+				aList.add(new InlineKeyboardButton(aIf.getAnswerText())
+						.setCallbackData("" + question.getDataBaseId() + "_" + aIf.getDatabaseId()));
 			else {
 				if (question.isTrue() && i == 0) {
-					aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + -1));
-				}else if(question.isTrue() && i == 1) {
-					aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + 0));
-				}else if (!question.isTrue() && i == 0) {
-					aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + 0));
-				}else {
-					aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + -1));
+					aList.add(new InlineKeyboardButton(aIf.getAnswerText())
+							.setCallbackData("" + question.getDataBaseId() + "_" + -1));
+				} else if (question.isTrue() && i == 1) {
+					aList.add(new InlineKeyboardButton(aIf.getAnswerText())
+							.setCallbackData("" + question.getDataBaseId() + "_" + 0));
+				} else if (!question.isTrue() && i == 0) {
+					aList.add(new InlineKeyboardButton(aIf.getAnswerText())
+							.setCallbackData("" + question.getDataBaseId() + "_" + 0));
+				} else {
+					aList.add(new InlineKeyboardButton(aIf.getAnswerText())
+							.setCallbackData("" + question.getDataBaseId() + "_" + -1));
 				}
 			}
 		}
-		int bs = 0; //ab hier hässlich
+		int bs = 0; // ab hier hässlich
 		try {
 			bs = execute(questionMessage).getMessageId();
 		} catch (TelegramApiException e) {
 			e.printStackTrace();
 		}
-		
-		EditMessageText new_message = new EditMessageText()
-              .setChatId(chatId)
-              .setMessageId(bs)
-              .setText(question.getQuestionText());
-		
+
+		EditMessageText new_message = new EditMessageText().setChatId(chatId).setMessageId(bs)
+				.setText(question.getQuestionText());
+
 		TimerTask tt = new TimerTask() {
 
 			@Override
@@ -145,7 +164,7 @@ public class QuizBot extends TelegramLongPollingBot {
 					execute(new_message);
 				} catch (TelegramApiException e) {
 					e.printStackTrace();
-				} //ende hässlich
+				} // ende hässlich
 				showNewQuestion(chatId);
 
 			}
