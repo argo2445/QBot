@@ -8,7 +8,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import quizinterfaces.AnswerInterface;
 import quizinterfaces.QuestionInterface;
 import quizinterfaces.QuizInterface;
 
