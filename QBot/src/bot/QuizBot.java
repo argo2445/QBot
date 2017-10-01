@@ -5,15 +5,14 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.telegram.telegrambots.api.methods.groupadministration.GetChat;
-import org.telegram.telegrambots.api.methods.groupadministration.GetChatMember;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
+import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import quiz.QuizController;
 import quizinterfaces.AnswerInterface;
 import quizinterfaces.QuestionInterface;
 import quizinterfaces.QuizInterface;
@@ -21,6 +20,10 @@ import quizinterfaces.QuizInterface;
 public class QuizBot extends TelegramLongPollingBot {
 
 	private QuizInterface quizInterface;
+
+	public QuizBot(QuizController quizController) {
+		quizInterface=quizController;
+	}
 
 	@Override
 	public String getBotUsername() {
@@ -37,16 +40,20 @@ public class QuizBot extends TelegramLongPollingBot {
 		if (update.hasMessage()) {
 			if (update.getMessage().getText().startsWith("/start")) {
 				startQuiz(update);
-			}else if(update.hasCallbackQuery()) {
-				answerQuestion(update);
+			} else if (update.getMessage().getText().startsWith("/stop")) {
+				quizInterface.endGame(update.getMessage().getChatId());
 			}
+		} else if (update.hasCallbackQuery()) {
+			answerQuestion(update);
 		}
 
 	}
 
 	private void answerQuestion(Update update) {
-		quizInterface.addPlayer(update.getCallbackQuery().getFrom().getId(), update.getCallbackQuery().getMessage().getChatId());
-		quizInterface.enterAnswer(update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getFrom().getId(), Integer.parseInt(update.getCallbackQuery().getData()));
+		quizInterface.addPlayer(update.getCallbackQuery().getFrom().getId(),
+				update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getFrom().getUserName());
+		quizInterface.enterAnswer(update.getCallbackQuery().getMessage().getChatId(),
+				update.getCallbackQuery().getFrom().getId(), Integer.parseInt(update.getCallbackQuery().getData()));
 	}
 
 	private void startQuiz(Update update) {
@@ -61,17 +68,27 @@ public class QuizBot extends TelegramLongPollingBot {
 		}
 		long chatId = update.getMessage().getChatId();
 		quizInterface.createGame(chatId);
-		quizInterface.addPlayer(update.getMessage().getFrom().getId(), chatId, update.getMessage().getFrom().getUserName());
-
+		quizInterface.addPlayer(update.getMessage().getFrom().getId(), chatId,
+				update.getMessage().getFrom().getUserName());
+		quizInterface.startGame(chatId, roundsInt);
 		showNewQuestion(chatId);
 	}
 
 	private void showNewQuestion(long chatId) {
 		QuestionInterface question = quizInterface.fetchQuestion(chatId);
-		if(question==null)
-		{
-			List<String> score= quizInterface.retrieveScore(chatId);
-			
+		if (question == null) {
+			List<String> score = quizInterface.retrieveScore(chatId);
+			String output = "Die Runde wurde beendet. Spielstand: \n";
+			for (String string : score) {
+				output += string + "\n";
+			}
+			SendMessage msg = new SendMessage(chatId, output);
+			try {
+				execute(msg);
+			} catch (TelegramApiException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			return;
 		}
 		SendMessage questionMessage = new SendMessage(chatId, question.getQuestionText());
@@ -85,23 +102,23 @@ public class QuizBot extends TelegramLongPollingBot {
 				aList = new ArrayList<>();
 				bList.add(aList);
 			}
-			AnswerInterface aIf=question.getAnswers().get(i);
-			aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData(""+aIf.getDatabaseId()));
+			AnswerInterface aIf = question.getAnswers().get(i);
+			aList.add(new InlineKeyboardButton(aIf.getAnswerText()).setCallbackData("" + aIf.getDatabaseId()));
 		}
 		try {
 			execute(questionMessage);
 		} catch (TelegramApiException e) {
 			e.printStackTrace();
 		}
-		TimerTask tt=new TimerTask() {
-			
+		TimerTask tt = new TimerTask() {
+
 			@Override
 			public void run() {
 				showNewQuestion(chatId);
-				
+
 			}
 		};
-		new Timer().schedule(tt,2000L);
+		new Timer().schedule(tt, 2000L);
 	}
 
 }

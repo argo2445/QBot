@@ -15,7 +15,7 @@ public class Main {
         TelegramBotsApi botsApi = new TelegramBotsApi();
 
         try {
-            botsApi.registerBot(new DeprecatedQuizBot(new QuizController()));
+            botsApi.registerBot(new QuizBot(new QuizController()));
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
