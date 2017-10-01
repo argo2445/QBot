@@ -251,12 +251,14 @@ public class QuizController implements QuizInterface {
 				dbGameId = gameSet.getInt("gameid");
 			}
 			ResultSet scoreSet = statement
-					.executeQuery("SELECT score , player.playerid, name " + "FROM playergame INNER JOIN player "
+					.executeQuery("SELECT score , player.playerid, name, username" + "FROM playergame INNER JOIN player "
 							+ "ON player.playerid=playergame.playerid " + "WHERE playergame.gameid=" + dbGameId);
 			while (scoreSet.next()) {
-				String playerName = scoreSet.getString("name");
+				//String playerName = scoreSet.getString("name");
 				int playerScore = scoreSet.getInt("score");
-				scores.add(playerName + ": " + playerScore);
+				String userName = scoreSet.getString("username");
+				scores.add(userName + ": " + playerScore);
+				
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
