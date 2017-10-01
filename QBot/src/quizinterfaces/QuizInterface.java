@@ -15,7 +15,7 @@ public interface QuizInterface {
 	 * @param name Playername
 	 * @param chatID Id of the Chat where the Game is played
 	 */
-	public void addPlayer(int playerId, long chatID);
+	public void addPlayer(int playerId, long chatID, String userName);
 	
 	/**
 	 * Starts the game 
@@ -38,7 +38,7 @@ public interface QuizInterface {
 	 * @param answer given Answer
 	 * @return true if Answer was right
 	 */
-	public boolean enterAnswer(long chatID, int playerId, AnswerInterface answer);
+	public boolean enterAnswer(long chatID, int playerId, int answerDbId);
 	
 	/**
 	 * Gets the current Score

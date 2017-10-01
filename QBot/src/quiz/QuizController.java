@@ -40,15 +40,15 @@ public class QuizController implements QuizInterface {
 	 * @see quizinterfaces.QuizInterface#addPlayer(int, long)
 	 */
 	@Override
-	public void addPlayer(int playerId, long chatID) {
+	public void addPlayer(int playerId, long chatID, String UserName) {
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
 			Statement statement = connection.createStatement();
 			ResultSet gameSet = statement.executeQuery("SELECT gameid, numberaskedquestions FROM game "
 					+ "WHERE chatid=" + chatID + " AND gameid=(SELECT MAX(gameid) FROM game)");
-			if (gameSet.next() && gameSet.getInt("numberaskedquestions") == 0)// noch keine Frage gestellt und das Spiel
-																				// existiert
+			if (gameSet.next())// das Spiel
+								// existiert
 			{
 				int gameId = gameSet.getInt("gameid");
 				// Finde heraus, ob es schon einen Spieler mit PlayerId gibt.
@@ -167,21 +167,32 @@ public class QuizController implements QuizInterface {
 	 * quizinterfaces.AnswerInterface)
 	 */
 	@Override
-	public boolean enterAnswer(long chatID, int playerId, AnswerInterface answer) {
+	public boolean enterAnswer(long chatID, int playerId, int answerDbId) {
 		// suche den Spieler mit dem Namen playerId und rufe dessen dbPlayerId ab
 		// Wenn gewusst, addiere richtige frage
 		// Addiere eine Frage zum Spieler
 		// wenn gewusst: lade das letzte Spiel mit der ChatId
 		// inkrementiere den Score
 		boolean correct = false;
-		Answer castedAnswer = (Answer) answer;
-		if (castedAnswer.getQuestion().getRightAnswer().getAnswerText().equals(answer.getAnswerText())) {
-			correct = true;
-		}
+		// Answer castedAnswer = (Answer) answer;
+		// if
+		// (castedAnswer.getQuestion().getRightAnswer().getAnswerText().equals(answer.getAnswerText()))
+		// {
+		// correct = true;
+		// }
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection("jdbc:sqlite:" + QuizController.DB_PATH);
 			Statement statement = connection.createStatement();
+
+			// Check if answerDbId is ID of correct Answer
+			ResultSet rightAnswerSet = statement.executeQuery(
+					"SELECT rightanswerid FROM question INNER JOIN answer ON question.questionid=answer.questionid");
+			if (rightAnswerSet.next()) {
+				int rightanswerId = rightAnswerSet.getInt("rightanswerid");
+				if (rightanswerId == answerDbId)
+					correct = true;
+			}
 			ResultSet playerSet = statement.executeQuery("SELECT playerId, answeredquestions, rightansweredquestions "
 					+ "FROM player WHERE name=" + playerId);
 			int dbPlayerId, rightanswered, answered, dbGameId;
